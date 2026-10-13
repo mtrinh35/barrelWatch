@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a2b">
+  <title>Barrelwatch — surf log</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #183536;
+      --muted: #667c78;
+      --paper: #f5f4ec;
+      --card: #fffef9;
+      --line: #dce4dc;
+      --sea: #187568;
+      --sea-dark: #125d54;
+      --foam: #e3f1e8;
+      --sand: #efd49e;
+      --danger: #a44436;
+      --shadow: 0 14px 40px rgba(24, 53, 54, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      min-height: 68px;
+      padding: 0 max(22px, calc((100vw - 1160px) / 2));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #102a2b;
+      color: #f7f5e9;
+    }
+    .brand { display: flex; gap: 11px; align-items: center; font-weight: 750; letter-spacing: -.03em; }
+    .brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #83b8a5; border-radius: 50%; color: #a9d7bd; font-size: 18px; }
+    .top-note { color: #bfd1c7; font-size: 13px; }
+    main { max-width: 1160px; margin: 0 auto; padding: 42px 22px 72px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 27px; }
+    .eyebrow { margin: 0 0 8px; color: var(--sea); font-size: 11px; text-transform: uppercase; letter-spacing: .15em; font-weight: 800; }
+    h1 { margin: 0; max-width: 700px; font-size: clamp(30px, 5vw, 47px); line-height: 1.04; letter-spacing: -.055em; font-weight: 740; }
+    .intro-copy { max-width: 310px; color: var(--muted); font-size: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+    .stat { padding: 16px 19px; background: #eaf0e8; border: 1px solid #e0e8df; border-radius: 14px; }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { margin-top: 3px; font-size: 22px; line-height: 1.15; font-weight: 740; letter-spacing: -.04em; }
+    .layout { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 22px; align-items: start; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    .form-panel { padding: 23px; position: sticky; top: 18px; }
+    .panel-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    h2 { margin: 0; font-size: 19px; letter-spacing: -.035em; }
+    .subhead { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 12px; }
+    .field { min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+    label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #3f5e59; }
+    input, select {
+      width: 100%; min-height: 44px; padding: 10px 11px; border: 1px solid #d4dfd7;
+      border-radius: 9px; color: var(--ink); background: #fff; outline: none;
+    }
+    input:focus, select:focus { border-color: #4b9b85; box-shadow: 0 0 0 3px rgba(24, 117, 104, .12); }
+    .form-actions { display: flex; gap: 9px; margin-top: 19px; }
+    .primary, .secondary, .quiet {
+      min-height: 43px; border: 0; border-radius: 9px; padding: 10px 15px; font-weight: 720;
+      transition: background .15s ease, transform .15s ease;
+    }
+    .primary { flex: 1; background: var(--sea); color: white; }
+    .primary:hover { background: var(--sea-dark); transform: translateY(-1px); }
+    .secondary { background: #e9efea; color: var(--ink); }
+    .secondary:hover { background: #dce8df; }
+    .quiet { min-height: 34px; padding: 6px 9px; background: transparent; color: var(--muted); font-size: 12px; }
+    .quiet:hover { background: #edf2ec; color: var(--ink); }
+    .message { min-height: 20px; margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+    .message.error { color: var(--danger); }
+    .list-panel { padding: 22px; }
+    .list-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .session-count { color: var(--muted); font-size: 12px; }
+    .session-list { display: grid; gap: 11px; }
+    .session-card { padding: 17px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .session-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .session-location { margin: 0; font-size: 17px; line-height: 1.2; font-weight: 750; letter-spacing: -.03em; overflow-wrap: anywhere; }
+    .session-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .session-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; color: #45635e; font-size: 12px; }
+    .pill { padding: 5px 8px; border-radius: 999px; background: var(--foam); }
+    .rating { color: #9a681b; font-weight: 750; }
+    .card-actions { display: flex; justify-content: end; gap: 3px; margin: 10px -5px -7px 0; }
+    .empty { padding: 38px 18px; text-align: center; border: 1px dashed #c9d7ce; border-radius: 13px; color: var(--muted); }
+    .empty-icon { display: block; margin-bottom: 9px; font-size: 27px; }
+    .empty strong { display: block; margin-bottom: 3px; color: var(--ink); }
+    .connection { margin-top: 17px; color: var(--muted); font-size: 11px; }
+    .connection::before { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 7px 1px 0; border-radius: 50%; background: #8ba49a; }
+    .connection.online::before { background: #3d9b69; }
+    .connection.offline::before { background: #c45b49; }
+    @media (max-width: 760px) {
+      main { padding: 31px 15px 45px; }
+      .topbar { padding: 0 16px; }
+      .intro { display: block; margin-bottom: 20px; }
+      .intro-copy { margin-bottom: 0; }
+      .stats { gap: 8px; }
+      .stat { padding: 12px 11px; }
+      .stat-value { font-size: 19px; }
+      .layout { grid-template-columns: 1fr; }
+      .form-panel { position: static; order: 0; }
+      .list-panel { order: 1; padding: 17px; }
+    }
+    @media (max-width: 380px) {
+      .fields { grid-template-columns: 1fr; }
+      .field.wide { grid-column: auto; }
+      .top-note { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">〰</span><span>barrelwatch</span></div>
+    <span class="top-note">Your surf session journal</span>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">A little log of time in the water</p>
+        <h1 id="page-title">Remember the good ones.</h1>
+      </div>
+      <p class="intro-copy">Save the details while they’re fresh. Your sessions stay together in one simple place.</p>
+    </section>
+
+    <section class="stats" aria-label="Surf log summary">
+      <div class="stat"><div class="stat-label">Sessions logged</div><div class="stat-value" id="stat-total">—</div></div>
+      <div class="stat"><div class="stat-label">Average rating</div><div class="stat-value" id="stat-rating">—</div></div>
+      <div class="stat"><div class="stat-label">Most visited</div><div class="stat-value" id="stat-spot">—</div></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel form-panel" aria-labelledby="form-title">
+        <div class="panel-heading">
+          <div><h2 id="form-title">Log a session</h2><p class="subhead" id="form-subhead">A few details, then you’re done.</p></div>
+          <button class="quiet" id="cancel-edit" type="button" hidden>Cancel edit</button>
+        </div>
+        <form id="session-form">
+          <div class="fields">
+            <div class="field wide">
+              <label for="location">Surf spot</label>
+              <input id="location" name="location" list="known-spots" placeholder="e.g. Huntington Beach" required maxlength="100" autocomplete="off">
+              <datalist id="known-spots"></datalist>
+            </div>
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+            <div class="field">
+              <label for="timeOfDay">Time of day</label>
+              <select id="timeOfDay" name="timeOfDay" required>
+                <option>Morning</option><option>Afternoon</option><option>Evening</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="minWaveHeight">Min wave (ft)</label>
+              <input id="minWaveHeight" name="minWaveHeight" type="number" min="0" step="0.1" placeholder="2" required>
+            </div>
+            <div class="field">
+              <label for="maxWaveHeight">Max wave (ft)</label>
+              <input id="maxWaveHeight" name="maxWaveHeight" type="number" min="0" step="0.1" placeholder="3.5" required>
+            </div>
+            <div class="field wide">
+              <label for="rating">How was it? (1–10)</label>
+              <select id="rating" name="rating" required></select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="primary" id="submit-button" type="submit">Save session</button>
+          </div>
+          <p class="message" id="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel list-panel" aria-labelledby="list-title">
+        <div class="list-heading">
+          <div><h2 id="list-title">Recent sessions</h2><p class="subhead">Your latest time in the water.</p></div>
+          <span class="session-count" id="list-count"></span>
+        </div>
+        <div class="session-list" id="session-list" aria-live="polite"></div>
+        <p class="connection" id="connection-status">Connecting to your log…</p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // The page is served by Spring from the same origin as /sessions, so no CORS setup is needed.
+    const API = "/sessions";
+    const form = document.querySelector("#session-form");
+    const list = document.querySelector("#session-list");
+    const message = document.querySelector("#form-message");
+    const connection = document.querySelector("#connection-status");
+    const cancelEdit = document.querySelector("#cancel-edit");
+    let sessions = [];
+    let editingId = null;
+
+    // Default the date to the user's local calendar date, not UTC.
+    const today = new Date();
+    document.querySelector("#date").value = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
+    const ratingSelect = document.querySelector("#rating");
+    ratingSelect.innerHTML = '<option value="" disabled selected>Choose a rating</option>' +
+      Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}">${i + 1}${i === 9 ? " — unforgettable" : ""}</option>`).join("");
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    }
+
+    function niceDate(raw) {
+      // Add a midday time so date-only values don't shift to the prior day in some time zones.
+      const date = new Date(`${raw}T12:00:00`);
+      return Number.isNaN(date.getTime()) ? raw : new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
+    }
+
+    async function api(path = "", options = {}) {
+      const response = await fetch(`${API}${path}`, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+      });
+      const text = await response.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+      if (!response.ok) {
+        const detail = typeof data === "object" && data ? (data.message || data.error || data.detail) : data;
+        throw new Error(detail || `Request failed (${response.status})`);
+      }
+      return { response, data };
+    }
+
+    function setMessage(text = "", isError = false) {
+      message.textContent = text;
+      message.classList.toggle("error", isError);
+    }
+
+    function updateSummary() {
+      document.querySelector("#stat-total").textContent = sessions.length;
+      const rated = sessions.map(s => Number(s.rating)).filter(n => Number.isFinite(n));
+      document.querySelector("#stat-rating").textContent = rated.length ? `${(rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(1)} / 10` : "—";
+      const visits = new Map();
+      sessions.forEach(s => { const spot = String(s.location || "").trim(); if (spot) visits.set(spot, (visits.get(spot) || 0) + 1); });
+      const favorite = [...visits.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      const spot = document.querySelector("#stat-spot");
+      spot.textContent = favorite ? favorite[0] : "—";
+      spot.title = favorite ? `${favorite[1]} visit${favorite[1] === 1 ? "" : "s"}` : "No sessions yet";
+      document.querySelector("#list-count").textContent = `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`;
+      const spots = [...new Set(sessions.map(s => String(s.location || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      document.querySelector("#known-spots").innerHTML = spots.map(s => `<option value="${escapeHtml(s)}"></option>`).join("");
+    }
+
+    function renderSessions() {
+      updateSummary();
+      if (!sessions.length) {
+        list.innerHTML = '<div class="empty"><span class="empty-icon" aria-hidden="true">🌊</span><strong>No sessions logged yet</strong>Add your last surf and your journal starts here.</div>';
+        return;
+      }
+      const ordered = [...sessions].sort((a, b) => String(b.date).localeCompare(String(a.date)) || Number(b.id) - Number(a.id));
+      list.innerHTML = ordered.map(s => `
+        <article class="session-card">
+          <div class="session-top">
+            <h3 class="session-location">${escapeHtml(s.location)}</h3>
+            <time class="session-date" datetime="${escapeHtml(s.date)}">${escapeHtml(niceDate(s.date))}</time>
+          </div>
+          <div class="session-meta">
+            <span class="pill">${escapeHtml(s.timeOfDay)}</span>
+            <span class="pill">${escapeHtml(s.minWaveHeight)}–${escapeHtml(s.maxWaveHeight)} ft</span>
+            <span class="rating" aria-label="Rating ${escapeHtml(s.rating)} out of 10">★ ${escapeHtml(s.rating)} / 10</span>
+          </div>
+          <div class="card-actions">
+            <button class="quiet" type="button" data-action="edit" data-id="${escapeHtml(s.id)}">Edit</button>
+            <button class="quiet" type="button" data-action="delete" data-id="${escapeHtml(s.id)}">Delete</button>
+          </div>
+        </article>`).join("");
+    }
+
+    async function loadSessions() {
+      connection.textContent = "Connecting to your log…";
+      connection.className = "connection";
+      try {
+        const { data } = await api();
+        sessions = Array.isArray(data) ? data : [];
+        connection.textContent = "Connected to your session log";
+        connection.className = "connection online";
+      } catch (error) {
+        sessions = [];
+        connection.textContent = "Could not load sessions. Check that Spring Boot is running.";
+        connection.className = "connection offline";
+      }
+      renderSessions();
+    }
+
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      document.querySelector("#date").value = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
+      document.querySelector("#timeOfDay").value = "Morning";
+      document.querySelector("#form-title").textContent = "Log a session";
+      document.querySelector("#form-subhead").textContent = "A few details, then you’re done.";
+      document.querySelector("#submit-button").textContent = "Save session";
+      cancelEdit.hidden = true;
+      setMessage();
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.minWaveHeight = Number(data.minWaveHeight);
+      data.maxWaveHeight = Number(data.maxWaveHeight);
+      data.rating = Number(data.rating);
+      if (data.minWaveHeight > data.maxWaveHeight) {
+        setMessage("Min wave height should be less than or equal to max wave height.", true);
+        return;
+      }
+      const button = document.querySelector("#submit-button");
+      button.disabled = true;
+      button.textContent = editingId === null ? "Saving…" : "Updating…";
+      setMessage();
+      try {
+        if (editingId === null) {
+          await api("", { method: "POST", body: JSON.stringify(data) });
+          setMessage("Session saved. Nice one!");
+        } else {
+          await api(`/${encodeURIComponent(editingId)}`, { method: "PUT", body: JSON.stringify(data) });
+          setMessage("Session updated.");
+        }
+        resetForm();
+        await loadSessions();
+      } catch (error) {
+        setMessage(`Could not save: ${error.message}`, true);
+      } finally {
+        button.disabled = false;
+        button.textContent = editingId === null ? "Save session" : "Update session";
+      }
+    });
+
+    list.addEventListener("click", async event => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const session = sessions.find(s => String(s.id) === button.dataset.id);
+      if (!session) return;
+      if (button.dataset.action === "edit") {
+        editingId = session.id;
+        for (const key of ["location", "date", "timeOfDay", "minWaveHeight", "maxWaveHeight", "rating"]) {
+          form.elements[key].value = session[key];
+        }
+        document.querySelector("#form-title").textContent = "Edit session";
+        document.querySelector("#form-subhead").textContent = "Update the details and save.";
+        document.querySelector("#submit-button").textContent = "Update session";
+        cancelEdit.hidden = false;
+        setMessage();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.querySelector("#location").focus({ preventScroll: true });
+      } else if (button.dataset.action === "delete") {
+        if (!window.confirm(`Delete the ${session.location} session from ${niceDate(session.date)}?`)) return;
+        button.disabled = true;
+        try {
+          await api(`/${encodeURIComponent(session.id)}`, { method: "DELETE" });
+          if (String(editingId) === String(session.id)) resetForm();
+          await loadSessions();
+        } catch (error) {
+          button.disabled = false;
+          connection.textContent = `Could not delete session: ${error.message}`;
+          connection.className = "connection offline";
+        }
+      }
+    });
+
+    cancelEdit.addEventListener("click", resetForm);
+    loadSessions();
+  </script>
+</body>
+</html>
